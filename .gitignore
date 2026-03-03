@@ -1,0 +1,18 @@
+# Build files
+build/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+cmake_install.cmake
+
+# Executables
+Zipper
+
+# Logs
+*.log
+
+# Models
+models/
+
+# macOS
+.DS_Store
