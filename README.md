@@ -48,15 +48,3 @@ cd build
 cmake ..
 make
 ./Zipper 
-
-models/
-
-models/llama3_3b_q4.gguf  
-
-
----
-MIT License
-
-Copyright (c) 2026 Rishi Garg
-
-Permission is hereby granted...
