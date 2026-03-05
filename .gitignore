@@ -1,9 +1,20 @@
+# Build artifacts
 build/
+
+# Local models
 models/
+
+# Runtime data
+data/
+sessions/
+
+# External libraries not needed in repo
+external/json/
+
+# Future experimental modules
+src/agent/
+src/rag/
+src/tools/
+
+# macOS files
 .DS_Store
-CMakeFiles/
-CMakeCache.txt
-*.o
-*.a
-*.dylib
-*.log
