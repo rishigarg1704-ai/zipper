@@ -1,26 +1,9 @@
-# Build files
 build/
-cmake-build-debug/
-cmake-build-release/
-
-# Mac
-.DS_Store
-
-# Models (very large)
 models/
-
-# binaries
+.DS_Store
+CMakeFiles/
+CMakeCache.txt
 *.o
 *.a
 *.dylib
-*.so
-
-# CMake
-CMakeFiles/
-CMakeCache.txt
-
-# VSCode
-.vscode/
-
-# logs
 *.log
