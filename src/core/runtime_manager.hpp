@@ -33,10 +33,14 @@ public:
     void clear_conversation();
 
 private:
+
     std::string model_path_;
+
     int context_size_;
     int n_threads_;
+
     int max_tokens_;
+
     float temperature_;
     float top_p_;
 

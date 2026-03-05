@@ -21,10 +21,13 @@ bool LlamaBackend::load_model(const std::string& model_path,
         return false;
     }
 
+    context_size_ = context_size;
+    n_threads_ = n_threads;
+
     llama_context_params ctx_params = llama_context_default_params();
-    ctx_params.n_ctx = context_size;
-    ctx_params.n_threads = n_threads;
-    ctx_params.n_threads_batch = n_threads;
+    ctx_params.n_ctx = context_size_;
+    ctx_params.n_threads = n_threads_;
+    ctx_params.n_threads_batch = n_threads_;
 
     ctx_ = llama_init_from_model(model_, ctx_params);
 
@@ -51,6 +54,20 @@ void LlamaBackend::unload_model() {
     llama_backend_free();
 }
 
+void LlamaBackend::clear_kv_cache() {
+    // Recreate context to fully clear KV cache
+    if (ctx_ && model_) {
+        llama_free(ctx_);
+
+        llama_context_params ctx_params = llama_context_default_params();
+        ctx_params.n_ctx = context_size_;
+        ctx_params.n_threads = n_threads_;
+        ctx_params.n_threads_batch = n_threads_;
+
+        ctx_ = llama_init_from_model(model_, ctx_params);
+    }
+}
+
 bool LlamaBackend::generate(
     const std::string& prompt,
     int max_tokens,
@@ -59,6 +76,19 @@ bool LlamaBackend::generate(
     TokenCallback callback)
 {
     if (!ctx_ || !model_)
+        return false;
+
+    // RECREATE CONTEXT to fully clear KV cache
+    llama_free(ctx_);
+
+    llama_context_params ctx_params = llama_context_default_params();
+    ctx_params.n_ctx = context_size_;
+    ctx_params.n_threads = n_threads_;
+    ctx_params.n_threads_batch = n_threads_;
+
+    ctx_ = llama_init_from_model(model_, ctx_params);
+
+    if (!ctx_)
         return false;
 
     const llama_vocab* vocab = llama_model_get_vocab(model_);
@@ -110,7 +140,7 @@ bool LlamaBackend::generate(
 
     llama_sampler_chain_add(sampler, llama_sampler_init_temp(temperature));
     llama_sampler_chain_add(sampler, llama_sampler_init_top_p(top_p, 1));
-    llama_sampler_chain_add(sampler, llama_sampler_init_dist(0));  // REQUIRED!
+    llama_sampler_chain_add(sampler, llama_sampler_init_dist(0));
 
     // ---- generation loop ----
 
@@ -123,7 +153,7 @@ bool LlamaBackend::generate(
 
         llama_sampler_accept(sampler, token);
 
-        // Output token FIRST
+        // Output token
         char piece[128];
 
         int len = llama_token_to_piece(
@@ -138,7 +168,7 @@ bool LlamaBackend::generate(
         if (len > 0)
             callback(std::string(piece, len));
 
-        // THEN decode next token
+        // Decode next token
         llama_batch new_batch = llama_batch_init(1, 0, 1);
 
         new_batch.token[0] = token;

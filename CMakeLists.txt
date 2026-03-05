@@ -11,21 +11,13 @@ add_subdirectory(external/llama.cpp)
 set(SOURCE_FILES
     src/main.cpp
 
-    src/core/app_controller.cpp
     src/core/runtime_manager.cpp
-    src/core/memory_manager.cpp
-    src/core/session_manager.cpp
-    src/core/logger.cpp
-    src/core/crash_handler.cpp
     src/core/conversation_manager.cpp
     src/core/prompt_builder.cpp
+    src/core/context_manager.cpp
+
 
     src/backend/llama_backend.cpp
-
-    src/gui/main_window.cpp
-    src/gui/input_panel.cpp
-    src/gui/output_panel.cpp
-    src/gui/ui_state.cpp
 )
 
 add_executable(Zipper ${SOURCE_FILES})
@@ -33,6 +25,7 @@ add_executable(Zipper ${SOURCE_FILES})
 target_include_directories(Zipper PRIVATE
     src
     external/llama.cpp
+    external/json
 )
 
-target_link_libraries(Zipper PRIVATE llama) 
+target_link_libraries(Zipper PRIVATE llama)

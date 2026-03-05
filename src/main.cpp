@@ -29,11 +29,13 @@ int main() {
         std::getline(std::cin, input);
 
         if (input == "exit") break;
+
         if (input == "clear") {
             runtime.clear_conversation();
             std::cout << "Conversation cleared.\n";
             continue;
         }
+
         if (input.empty()) continue;
 
         std::cout << "Assistant: ";

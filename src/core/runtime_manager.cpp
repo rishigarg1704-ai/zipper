@@ -29,30 +29,30 @@ void RuntimeManager::set_system_prompt(const std::string& system) {
 }
 
 void RuntimeManager::generate(const std::string& user_input,
-                               LlamaBackend::TokenCallback callback) {
+                              LlamaBackend::TokenCallback callback) {
 
-    // Add user message to history
+    // Add user message to conversation history
     conversation_.add_user_message(user_input);
 
-    // Build prompt from conversation history
+    // Build prompt
     std::string prompt = prompt_builder_.build(conversation_.get_history());
 
-    // Collect assistant response
     std::string response;
 
-    // Generate response
+    // Generate tokens
     backend_.generate(prompt, max_tokens_, temperature_, top_p_,
         [&](const std::string& token) {
             response += token;
             callback(token);
         });
 
-    // Add assistant response to history
+    // Store assistant reply
     conversation_.add_assistant_message(response);
 }
 
 void RuntimeManager::clear_conversation() {
     conversation_.clear();
+    backend_.clear_kv_cache();
 }
 
 }

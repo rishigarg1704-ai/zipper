@@ -22,6 +22,8 @@ public:
 
     void unload_model();
 
+    void clear_kv_cache();
+
     bool generate(const std::string& prompt,
                   int max_tokens,
                   float temperature,
@@ -31,6 +33,8 @@ public:
 private:
     llama_model* model_ = nullptr;
     llama_context* ctx_ = nullptr;
+    int context_size_ = 4096;
+    int n_threads_ = 4;
 };
 
 }
