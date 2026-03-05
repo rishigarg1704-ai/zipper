@@ -1,18 +1,26 @@
 # Build files
 build/
-CMakeFiles/
-CMakeCache.txt
-Makefile
-cmake_install.cmake
+cmake-build-debug/
+cmake-build-release/
 
-# Executables
-Zipper
+# Mac
+.DS_Store
 
-# Logs
-*.log
-
-# Models
+# Models (very large)
 models/
 
-# macOS
-.DS_Store
+# binaries
+*.o
+*.a
+*.dylib
+*.so
+
+# CMake
+CMakeFiles/
+CMakeCache.txt
+
+# VSCode
+.vscode/
+
+# logs
+*.log

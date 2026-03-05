@@ -1,121 +1,58 @@
-#include "core/runtime_manager.hpp"
-#include "backend/llama_backend.hpp"
-#include "core/logger.hpp"
+#include "runtime_manager.hpp"
 
 namespace zipper {
 
-RuntimeManager::RuntimeManager()
-    : backend_(std::make_unique<LlamaBackend>()),
-      generating_(false),
-      stop_requested_(false)
-{
-    Logger::instance().log(LogLevel::INFO, "RuntimeManager created");
+RuntimeManager::RuntimeManager(const std::string& model_path,
+                               int context_size,
+                               int n_threads,
+                               int max_tokens,
+                               float temperature,
+                               float top_p)
+    : model_path_(model_path),
+      context_size_(context_size),
+      n_threads_(n_threads),
+      max_tokens_(max_tokens),
+      temperature_(temperature),
+      top_p_(top_p) {
 }
 
-RuntimeManager::~RuntimeManager() {
-    stop_generation();
-
-    if (worker_thread_.joinable()) {
-        worker_thread_.join();
-    }
-
-    unload_model();
-    Logger::instance().log(LogLevel::INFO, "RuntimeManager destroyed");
-}
-
-MemoryCheckResult RuntimeManager::load_model(const std::string& model_path) {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    auto result = memory_manager_.can_load_model(model_path);
-
-    if (result != MemoryCheckResult::ALLOW) {
-        Logger::instance().log(LogLevel::WARN, "Memory check did not allow model load");
-        return result;
-    }
-
-    if (backend_->is_model_loaded()) {
-        return MemoryCheckResult::ALLOW;
-    }
-
-    bool ok = backend_->load_model(model_path);
-
-    if (ok) {
-        Logger::instance().log(LogLevel::INFO, "Model load successful");
-        return MemoryCheckResult::ALLOW;
-    }
-
-    Logger::instance().log(LogLevel::ERROR, "Backend failed to load model");
-    return MemoryCheckResult::REFUSE;
-}
-
-void RuntimeManager::enable_memory_override() {
-    memory_manager_.enable_override();
+bool RuntimeManager::load_model() {
+    return backend_.load_model(model_path_, context_size_, n_threads_);
 }
 
 void RuntimeManager::unload_model() {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    if (backend_->is_model_loaded()) {
-        backend_->unload_model();
-        Logger::instance().log(LogLevel::INFO, "Model unloaded");
-    }
+    backend_.unload_model();
 }
 
-bool RuntimeManager::is_model_loaded() const {
-    return backend_->is_model_loaded();
+void RuntimeManager::set_system_prompt(const std::string& system) {
+    prompt_builder_.set_system_prompt(system);
 }
 
-void RuntimeManager::send_user_message(const std::string& message) {
-    session_manager_.add_user_message(message);
-}
+void RuntimeManager::generate(const std::string& user_input,
+                               LlamaBackend::TokenCallback callback) {
 
-void RuntimeManager::generate(TokenCallback on_token) {
-    if (!backend_->is_model_loaded()) {
-        Logger::instance().log(LogLevel::ERROR,
-            "Generate called without model loaded");
-        return;
-    }
+    // Add user message to history
+    conversation_.add_user_message(user_input);
 
-    if (generating_) {
-        Logger::instance().log(LogLevel::WARN,
-            "Generation already in progress");
-        return;
-    }
+    // Build prompt from conversation history
+    std::string prompt = prompt_builder_.build(conversation_.get_history());
 
-    generating_ = true;
-    stop_requested_ = false;
+    // Collect assistant response
+    std::string response;
 
-    std::string full_prompt = session_manager_.build_prompt();
-
-    worker_thread_ = std::thread([this, full_prompt, on_token]() {
-        std::string assistant_output;
-
-        backend_->generate(full_prompt, [&](const std::string& token) {
-            if (stop_requested_) return;
-
-            assistant_output += token;
-            on_token(token);
+    // Generate response
+    backend_.generate(prompt, max_tokens_, temperature_, top_p_,
+        [&](const std::string& token) {
+            response += token;
+            callback(token);
         });
 
-        session_manager_.add_assistant_message(assistant_output);
-
-        generating_ = false;
-    });
+    // Add assistant response to history
+    conversation_.add_assistant_message(response);
 }
 
-void RuntimeManager::stop_generation() {
-    if (generating_) {
-        stop_requested_ = true;
-        backend_->stop_generation();
-
-        if (worker_thread_.joinable()) {
-            worker_thread_.join();
-        }
-
-        generating_ = false;
-        Logger::instance().log(LogLevel::INFO,
-            "RuntimeManager stopped generation");
-    }
+void RuntimeManager::clear_conversation() {
+    conversation_.clear();
 }
 
 }

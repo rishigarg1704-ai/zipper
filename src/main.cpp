@@ -1,76 +1,51 @@
 #include <iostream>
-#include <string>
 
-#include "core/logger.hpp"
-#include "core/crash_handler.hpp"
 #include "core/runtime_manager.hpp"
-#include "core/session_manager.hpp"
 
 int main() {
 
-    zipper::Logger::instance().init("zipper.log");
-    zipper::CrashHandler::install();
+    zipper::RuntimeManager runtime(
+        "../models/llama3_8b_q4.gguf",
+        4096,
+        8,
+        256,
+        0.7f,
+        0.9f
+    );
 
-    zipper::RuntimeManager runtime;
-    zipper::SessionManager session;
-
-    const std::string model_path = "../models/llama3_3b_q4.gguf";
-
-    auto result = runtime.load_model(model_path);
-
-    if (result != zipper::MemoryCheckResult::ALLOW) {
-        std::cout << "Model load failed.\n";
+    if (!runtime.load_model()) {
+        std::cerr << "Model load failed.\n";
         return 1;
     }
 
-    std::cout << "Zipper ready.\n";
-    std::cout << "Type '/reset' to clear memory.\n";
-    std::cout << "Type 'exit' to quit.\n";
+    runtime.set_system_prompt("You are a helpful AI assistant named Zipper.");
+
+    std::cout << "Zipper ready. Type 'exit' to quit, 'clear' to reset.\n";
 
     while (true) {
 
         std::cout << "\nYou: ";
-
         std::string input;
-        std::getline(std::cin >> std::ws, input);
+        std::getline(std::cin, input);
 
         if (input == "exit") break;
-
-        if (input == "/reset") {
-            session.reset();
-            std::cout << "Session reset.\n";
+        if (input == "clear") {
+            runtime.clear_conversation();
+            std::cout << "Conversation cleared.\n";
             continue;
         }
-
         if (input.empty()) continue;
-
-        // 1️⃣ Add user message
-        session.add_user_message(input);
-
-        // 2️⃣ Build full conversation prompt
-        std::string full_prompt = session.build_prompt();
 
         std::cout << "Assistant: ";
 
-        std::string assistant_reply;
-
-        // 3️⃣ Generate response
-        runtime.generate(
-            full_prompt,
-            [&](const std::string& token) {
-                std::cout << token << std::flush;
-                assistant_reply += token;
-            }
-        );
+        runtime.generate(input, [](const std::string& token) {
+            std::cout << token << std::flush;
+        });
 
         std::cout << "\n";
-
-        // 4️⃣ Save assistant reply
-        session.add_assistant_message(assistant_reply);
     }
 
     runtime.unload_model();
-    zipper::Logger::instance().shutdown();
 
     return 0;
 }

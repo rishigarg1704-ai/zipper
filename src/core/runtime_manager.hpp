@@ -1,42 +1,48 @@
 #pragma once
 
-#include "core/inference_backend.hpp"
-#include "core/memory_manager.hpp"
-#include "core/session_manager.hpp"
+#include <string>
+#include <functional>
 
-#include <memory>
-#include <atomic>
-#include <mutex>
-#include <thread>
+#include "../backend/llama_backend.hpp"
+#include "conversation_manager.hpp"
+#include "prompt_builder.hpp"
 
 namespace zipper {
 
 class RuntimeManager {
 public:
-    RuntimeManager();
-    ~RuntimeManager();
 
-    MemoryCheckResult load_model(const std::string& model_path);
-    void enable_memory_override();
+    RuntimeManager(const std::string& model_path,
+                   int context_size,
+                   int n_threads,
+                   int max_tokens,
+                   float temperature,
+                   float top_p);
+
+    ~RuntimeManager() = default;
+
+    bool load_model();
 
     void unload_model();
-    bool is_model_loaded() const;
 
-    void send_user_message(const std::string& message);
+    void set_system_prompt(const std::string& system);
 
-    void generate(TokenCallback on_token);
-    void stop_generation();
+    void generate(const std::string& user_input,
+                  LlamaBackend::TokenCallback callback);
+
+    void clear_conversation();
 
 private:
-    std::unique_ptr<InferenceBackend> backend_;
-    MemoryManager memory_manager_;
-    SessionManager session_manager_;
+    std::string model_path_;
+    int context_size_;
+    int n_threads_;
+    int max_tokens_;
+    float temperature_;
+    float top_p_;
 
-    std::atomic<bool> generating_;
-    std::atomic<bool> stop_requested_;
-
-    std::mutex mutex_;
-    std::thread worker_thread_;
+    LlamaBackend backend_;
+    ConversationManager conversation_;
+    PromptBuilder prompt_builder_;
 };
 
 }

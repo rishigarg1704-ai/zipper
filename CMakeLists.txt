@@ -17,6 +17,8 @@ set(SOURCE_FILES
     src/core/session_manager.cpp
     src/core/logger.cpp
     src/core/crash_handler.cpp
+    src/core/conversation_manager.cpp
+    src/core/prompt_builder.cpp
 
     src/backend/llama_backend.cpp
 
@@ -33,4 +35,4 @@ target_include_directories(Zipper PRIVATE
     external/llama.cpp
 )
 
-target_link_libraries(Zipper PRIVATE llama)
+target_link_libraries(Zipper PRIVATE llama) 

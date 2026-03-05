@@ -10,23 +10,27 @@ namespace zipper {
 
 class LlamaBackend {
 public:
-    LlamaBackend();
-    ~LlamaBackend();
 
-    bool load(const std::string& model_path);
-    void unload();
+    using TokenCallback = std::function<void(const std::string&)>;
 
-    void generate(
-        const std::string& prompt,
-        std::function<void(const std::string&)> callback,
-        int max_tokens = 512,
-        float temperature = 0.7f,
-        float top_p = 0.9f
-    );
+    LlamaBackend() = default;
+    ~LlamaBackend() = default;
+
+    bool load_model(const std::string& model_path,
+                    int context_size,
+                    int n_threads);
+
+    void unload_model();
+
+    bool generate(const std::string& prompt,
+                  int max_tokens,
+                  float temperature,
+                  float top_p,
+                  TokenCallback callback);
 
 private:
-    llama_model* model_;
-    llama_context* ctx_;
+    llama_model* model_ = nullptr;
+    llama_context* ctx_ = nullptr;
 };
 
 }
