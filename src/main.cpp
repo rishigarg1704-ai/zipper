@@ -1,11 +1,19 @@
 #include <iostream>
+#include <filesystem>
 
 #include "core/runtime_manager.hpp"
 
 int main() {
 
+    const std::string model_name = "llama3_8b_q4.gguf";
+    std::string model_path = "models/" + model_name;
+
+    if (!std::filesystem::exists(model_path)) {
+        model_path = "../models/" + model_name;
+    }
+
     zipper::RuntimeManager runtime(
-        "../models/llama3_8b_q4.gguf",
+        model_path,
         4096,
         8,
         256,
@@ -18,17 +26,23 @@ int main() {
         return 1;
     }
 
-    runtime.set_system_prompt("You are a helpful AI assistant named Zipper.");
+    runtime.set_system_prompt(
+        "You are Zipper, a professional AI assistant. "
+        "Respond clearly and concisely. "
+        "Avoid exaggerated excitement or unnecessary phrases."
+    );
 
     std::cout << "Zipper ready. Type 'exit' to quit, 'clear' to reset.\n";
 
     while (true) {
 
         std::cout << "\nYou: ";
+
         std::string input;
         std::getline(std::cin, input);
 
-        if (input == "exit") break;
+        if (input == "exit")
+            break;
 
         if (input == "clear") {
             runtime.clear_conversation();
@@ -36,7 +50,8 @@ int main() {
             continue;
         }
 
-        if (input.empty()) continue;
+        if (input.empty())
+            continue;
 
         std::cout << "Assistant: ";
 

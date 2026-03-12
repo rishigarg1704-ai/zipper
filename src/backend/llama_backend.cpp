@@ -1,3 +1,4 @@
+// src/backend/llama_backend.cpp
 #include "llama_backend.hpp"
 
 #include <iostream>
@@ -14,6 +15,7 @@ bool LlamaBackend::load_model(const std::string& model_path,
     llama_backend_init();
 
     llama_model_params model_params = llama_model_default_params();
+    model_params.n_gpu_layers = 0; // Force CPU backend when GPU init is unstable.
     model_ = llama_model_load_from_file(model_path.c_str(), model_params);
 
     if (!model_) {
@@ -192,4 +194,4 @@ bool LlamaBackend::generate(
     return true;
 }
 
-}
+} // namespace zipper

@@ -6,6 +6,10 @@
 #include "../backend/llama_backend.hpp"
 #include "conversation_manager.hpp"
 #include "prompt_builder.hpp"
+#include "context_manager.hpp"
+
+#include "../tools/tool_registry.hpp"
+#include "../tools/tool_executor.hpp"
 
 namespace zipper {
 
@@ -35,18 +39,19 @@ public:
 private:
 
     std::string model_path_;
-
     int context_size_;
     int n_threads_;
-
     int max_tokens_;
-
     float temperature_;
     float top_p_;
 
     LlamaBackend backend_;
     ConversationManager conversation_;
     PromptBuilder prompt_builder_;
+    ContextManager context_manager_;
+
+    ToolRegistry tool_registry_;
+    ToolExecutor tool_executor_;
 };
 
 }
