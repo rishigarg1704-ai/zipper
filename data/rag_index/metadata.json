@@ -1,0 +1,11 @@
+{
+  "chunk_count": 1,
+  "document_count": 1,
+  "document_ids": [
+    "README.md"
+  ],
+  "embedding_dimension": 384,
+  "embedding_model": "bge-small-en-v1.5",
+  "index_path": "data/rag_index",
+  "version": 2
+}

@@ -26,6 +26,13 @@ add_executable(Zipper
     src/tools/file_reader/file_reader_tool.cpp
     src/tools/stock/stock_tool.cpp
     src/tools/web_search/web_search_tool.cpp
+    src/rag/document_loader/document_loader.cpp
+    src/rag/text_chunker/text_chunker.cpp
+    src/rag/embedding/embedding_backend.cpp
+    src/rag/embedding/embedding_generator.cpp
+    src/rag/vector_store/vector_store.cpp
+    src/rag/retriever/retriever.cpp
+    src/rag/context_builder/context_builder.cpp
 )
 
 target_include_directories(Zipper PRIVATE

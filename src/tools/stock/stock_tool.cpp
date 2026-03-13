@@ -5,33 +5,10 @@
 #include <cctype>
 #include <cstdio>
 #include <iomanip>
-#include <map>
 #include <sstream>
 
 namespace zipper {
 namespace {
-
-std::string toLowerCopy(std::string value)
-{
-    std::transform(
-        value.begin(),
-        value.end(),
-        value.begin(),
-        [](unsigned char c) { return static_cast<char>(std::tolower(c)); }
-    );
-    return value;
-}
-
-std::string toUpperCopy(std::string value)
-{
-    std::transform(
-        value.begin(),
-        value.end(),
-        value.begin(),
-        [](unsigned char c) { return static_cast<char>(std::toupper(c)); }
-    );
-    return value;
-}
 
 std::string trim(const std::string& value)
 {
@@ -46,12 +23,6 @@ std::string trim(const std::string& value)
     }
 
     return value.substr(start, end - start);
-}
-
-bool startsWith(const std::string& text, const std::string& prefix)
-{
-    return text.size() >= prefix.size() &&
-           std::equal(prefix.begin(), prefix.end(), text.begin());
 }
 
 std::string runCommand(const std::string& command, int& exit_code)
@@ -159,18 +130,6 @@ std::string extractJsonField(const std::string& json, const std::string& key)
     return trim(json.substr(pos, end - pos));
 }
 
-bool isAlphabeticSymbol(const std::string& token)
-{
-    if (token.empty() || token.size() > 6) {
-        return false;
-    }
-
-    return std::all_of(
-        token.begin(),
-        token.end(),
-        [](unsigned char c) { return std::isalpha(c) != 0; });
-}
-
 std::string formatSignedPercent(const std::string& raw_percent)
 {
     if (raw_percent.empty()) {
@@ -224,7 +183,7 @@ std::string StockTool::execute(const std::map<std::string, std::string>& argumen
 
     const std::string symbol = resolveSymbol(query);
     if (symbol.empty()) {
-        return "Could not infer stock symbol. Try: stock TSLA";
+        return "Invalid ticker symbol. Use uppercase letters and digits only, e.g. /stock AAPL";
     }
 
     return fetchQuote(symbol);
@@ -232,55 +191,22 @@ std::string StockTool::execute(const std::map<std::string, std::string>& argumen
 
 std::string StockTool::resolveSymbol(const std::string& query) const
 {
-    const std::string lowered = toLowerCopy(query);
+    const std::string symbol = trim(query);
+    return isValidSymbol(symbol) ? symbol : std::string{};
+}
 
-    static const std::map<std::string, std::string> known_names = {
-        {"tesla", "TSLA"},
-        {"apple", "AAPL"},
-        {"google", "GOOGL"},
-        {"alphabet", "GOOGL"},
-        {"microsoft", "MSFT"},
-        {"amazon", "AMZN"},
-        {"nvidia", "NVDA"},
-        {"meta", "META"},
-        {"facebook", "META"},
-        {"netflix", "NFLX"},
-        {"amd", "AMD"},
-        {"intel", "INTC"}
-    };
-
-    for (const auto& entry : known_names) {
-        if (lowered.find(entry.first) != std::string::npos) {
-            return entry.second;
-        }
+bool StockTool::isValidSymbol(const std::string& symbol) const
+{
+    if (symbol.empty()) {
+        return false;
     }
 
-    std::string cleaned;
-    cleaned.reserve(lowered.size());
-    for (unsigned char c : lowered) {
-        cleaned += std::isalnum(c) ? static_cast<char>(c) : ' ';
-    }
-
-    std::stringstream ss(cleaned);
-    std::string token;
-    while (ss >> token) {
-        if (token == "stock" || token == "price" || token == "latest" ||
-            token == "today" || token == "current" || token == "share" ||
-            token == "shares" || token == "quote" || token == "ticker")
-        {
-            continue;
-        }
-
-        if (startsWith(token, "nasdaq")) {
-            continue;
-        }
-
-        if (isAlphabeticSymbol(token)) {
-            return toUpperCopy(token);
-        }
-    }
-
-    return {};
+    return std::all_of(
+        symbol.begin(),
+        symbol.end(),
+        [](unsigned char c) {
+            return std::isdigit(c) != 0 || (std::isupper(c) != 0 && std::isalpha(c) != 0);
+        });
 }
 
 std::string StockTool::fetchQuote(const std::string& symbol) const

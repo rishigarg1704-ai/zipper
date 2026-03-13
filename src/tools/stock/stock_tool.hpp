@@ -13,6 +13,7 @@ public:
 private:
     std::string resolveSymbol(const std::string& query) const;
     std::string fetchQuote(const std::string& symbol) const;
+    bool isValidSymbol(const std::string& symbol) const;
 };
 
 } // namespace zipper

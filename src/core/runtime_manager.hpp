@@ -11,6 +11,13 @@
 #include "../tools/tool_registry.hpp"
 #include "../tools/tool_executor.hpp"
 
+#include "../rag/document_loader/document_loader.hpp"
+#include "../rag/text_chunker/text_chunker.hpp"
+#include "../rag/embedding/embedding_generator.hpp"
+#include "../rag/vector_store/vector_store.hpp"
+#include "../rag/retriever/retriever.hpp"
+#include "../rag/context_builder/context_builder.hpp"
+
 namespace zipper {
 
 class RuntimeManager {
@@ -37,6 +44,7 @@ public:
     void clear_conversation();
 
 private:
+    bool handle_rag_command(const std::string& user_input, std::string& response);
 
     std::string model_path_;
     int context_size_;
@@ -52,6 +60,13 @@ private:
 
     ToolRegistry tool_registry_;
     ToolExecutor tool_executor_;
+
+    rag::DocumentLoader rag_document_loader_;
+    rag::TextChunker rag_text_chunker_;
+    rag::EmbeddingGenerator rag_embedding_generator_;
+    rag::VectorStore rag_vector_store_;
+    rag::Retriever rag_retriever_;
+    rag::ContextBuilder rag_context_builder_;
 };
 
 }
