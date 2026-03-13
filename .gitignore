@@ -1,54 +1,15 @@
-# =========================
-# Build artifacts
-# =========================
-
+# Build files
 build/
-cmake-build-*/
-CMakeFiles/
-CMakeCache.txt
-Makefile
-compile_commands.json
 
-# =========================
-# macOS system files
-# =========================
+# Models
+models/*.gguf
+models/*.bin
 
+# RAG database
+data/
+
+# macOS
 .DS_Store
 
-# =========================
 # Logs
-# =========================
-
 *.log
-
-# =========================
-# Temporary files
-# =========================
-
-*.tmp
-*.temp
-*.swp
-
-# =========================
-# Model files (optional)
-# large files often excluded
-# =========================
-
-models/*.gguf
-
-# =========================
-# IDE files
-# =========================
-
-.vscode/
-.idea/
-
-# =========================
-# Do NOT ignore tools
-# =========================
-
-# Important:
-# src/tools must be tracked
-# because it contains the tool system
-
-!src/tools/
